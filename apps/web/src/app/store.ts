@@ -1,20 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '@features/auth/store/authSlice';
 
-/**
- * Redux store configuration.
- * Feature slices are added here as modules are built.
- */
 export const store = configureStore({
   reducer: {
-    // Feature slices — uncomment as they are implemented:
-    // auth: authReducer,
-    // ui: uiReducer,
-    // notifications: notificationsReducer,
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore certain paths for non-serializable values (e.g., Date objects)
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
         ignoredPaths: [],
       },

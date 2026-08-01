@@ -31,7 +31,7 @@ export function errorMiddleware(
         code: 'mongoose_validation',
       })),
     ]);
-  } else if ((error as NodeJS.ErrnoException).code === 11000) {
+  } else if (String((error as { code?: string | number }).code) === '11000') {
     // MongoDB duplicate key error
     appError = new AppError(
       'A record with this value already exists',

@@ -28,10 +28,12 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return (...args: Parameters<T>) => {
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = setTimeout(() => {
       callbackRef.current(...args);
     }, delayMs);

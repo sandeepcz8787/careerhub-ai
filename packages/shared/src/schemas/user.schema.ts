@@ -31,25 +31,6 @@ export const updateProfileSchema = z.object({
     .optional(),
 });
 
-/** Change password schema */
-export const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .max(128)
-      .regex(/[A-Z]/, 'Must contain uppercase')
-      .regex(/[a-z]/, 'Must contain lowercase')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
-    confirmNewPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmNewPassword'],
-  });
-
 /** Pagination query schema */
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -61,5 +42,4 @@ export const paginationSchema = z.object({
 
 // Inferred types
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
-export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;

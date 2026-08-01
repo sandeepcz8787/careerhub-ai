@@ -24,7 +24,7 @@ export function validate<T>(schema: ZodSchema<T>, target: ValidationTarget = 'bo
     }
 
     // Replace with parsed/coerced data
-    (req as Record<string, unknown>)[target] = result.data;
+    (req as unknown as Record<string, unknown>)[target] = result.data;
     next();
   };
 }

@@ -1,19 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import { verifyAccessToken, extractBearerToken } from '../utils/jwt.util';
+import { SessionService } from '../services/session.service';
 import { AuthError } from '../errors/AuthError';
 import { UserRole, hasMinimumRole } from '@careerhub/shared';
-import type { AccessTokenPayload } from '@careerhub/shared';
 
 /**
- * Augment Express Request with authenticated user data.
- * Declared here — the full declaration is in types/express.d.ts
+ * Verify JWT access token and validate active session status.
  */
-
-/**
- * Verify JWT access token and attach user to request.
- */
-export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
+export async function authMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const token = extractBearerToken(req.headers.authorization);
 
   if (!token) {
@@ -22,6 +17,15 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
 
   try {
     const payload = verifyAccessToken(token);
+
+    // Validate that the session has not been revoked or expired
+    if (payload.sessionId) {
+      const isValidSession = await SessionService.validateSession(payload.sessionId);
+      if (!isValidSession) {
+        return next(new AuthError('Session has been revoked or expired. Please login again.', 'AUTH_TOKEN_EXPIRED'));
+      }
+    }
+
     req.user = payload;
     next();
   } catch (error) {
@@ -29,16 +33,22 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
   }
 }
 
+/** Alias for authMiddleware */
+export const authenticate = authMiddleware;
+
 /**
- * Optional auth — attaches user if token exists, continues if not.
- * Use for routes that work for both guests and authenticated users.
+ * Optional auth — attaches user if valid token & session exists, continues if not.
  */
-export function optionalAuthMiddleware(req: Request, _res: Response, next: NextFunction): void {
+export async function optionalAuthMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const token = extractBearerToken(req.headers.authorization);
 
   if (token) {
     try {
-      req.user = verifyAccessToken(token);
+      const payload = verifyAccessToken(token);
+      const isValid = await SessionService.validateSession(payload.sessionId);
+      if (isValid) {
+        req.user = payload;
+      }
     } catch {
       // Non-critical — continue as guest
     }
@@ -48,10 +58,7 @@ export function optionalAuthMiddleware(req: Request, _res: Response, next: NextF
 
 /**
  * Role-based access control guard.
- * Requires `authMiddleware` to run first.
- *
- * Usage:
- *   router.get('/admin', authMiddleware, requireRole(UserRole.ADMIN), handler)
+ * Alias: authorize(...roles)
  */
 export function requireRole(...roles: UserRole[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
@@ -70,8 +77,11 @@ export function requireRole(...roles: UserRole[]) {
   };
 }
 
+/** Alias for requireRole */
+export const authorize = requireRole;
+
 /**
- * Minimum role guard factory (more ergonomic than requireRole for hierarchy checks).
+ * Minimum role guard factory.
  */
 export function requireMinRole(minimumRole: UserRole) {
   return (req: Request, _res: Response, next: NextFunction): void => {

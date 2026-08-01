@@ -3,21 +3,22 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 import { UserRole, AccountStatus } from '@careerhub/shared';
 import { hashPassword } from '../utils/hash.util';
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_TIME_MS = 15 * 60 * 1000; // 15 minutes
+
 /**
  * User document interface — extends Mongoose Document.
  */
 export interface IUser extends Document {
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
   role: UserRole;
   status: AccountStatus;
   isEmailVerified: boolean;
-  emailVerificationOtp?: string;
-  emailVerificationOtpExpiry?: Date;
-  passwordResetToken?: string;
-  passwordResetTokenExpiry?: Date;
-  tokenVersion: number; // Incremented on logout/password change to invalidate all refresh tokens
+  tokenVersion: number;
   lastLoginAt?: Date;
+  failedLoginAttempts: number;
+  lockUntil?: Date;
   profile: {
     firstName: string;
     lastName: string;
@@ -41,9 +42,14 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 
+  // Virtuals
+  isLocked: boolean;
+
   // Instance methods
   comparePassword(plaintext: string): Promise<boolean>;
   getFullName(): string;
+  incLoginAttempts(): Promise<void>;
+  resetLockout(): Promise<void>;
 }
 
 /**
@@ -51,6 +57,7 @@ export interface IUser extends Document {
  */
 export interface IUserModel extends Model<IUser> {
   findByEmail(email: string): Promise<IUser | null>;
+  findByEmailWithPassword(email: string): Promise<IUser | null>;
 }
 
 const socialLinkSchema = new Schema(
@@ -104,7 +111,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     passwordHash: {
       type: String,
       required: false,
-      select: false, // Never return in queries by default
+      select: false,
     },
     role: {
       type: String,
@@ -119,12 +126,10 @@ const userSchema = new Schema<IUser, IUserModel>(
       index: true,
     },
     isEmailVerified: { type: Boolean, default: false },
-    emailVerificationOtp: { type: String, select: false },
-    emailVerificationOtpExpiry: { type: Date, select: false },
-    passwordResetToken: { type: String, select: false },
-    passwordResetTokenExpiry: { type: Date, select: false },
     tokenVersion: { type: Number, default: 0 },
     lastLoginAt: { type: Date },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date },
     profile: { type: profileSchema, required: true },
     oauthProviders: { type: [oauthProviderSchema], default: [] },
   },
@@ -132,40 +137,35 @@ const userSchema = new Schema<IUser, IUserModel>(
     timestamps: true,
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        delete ret.passwordHash;
-        delete ret.emailVerificationOtp;
-        delete ret.emailVerificationOtpExpiry;
-        delete ret.passwordResetToken;
-        delete ret.passwordResetTokenExpiry;
-        delete ret.tokenVersion;
+      transform: (_doc, ret: Record<string, unknown>) => {
+        ret['id'] = ret['_id'];
+        delete ret['_id'];
+        delete ret['__v'];
+        delete ret['passwordHash'];
+        delete ret['tokenVersion'];
+        delete ret['failedLoginAttempts'];
+        delete ret['lockUntil'];
         return ret;
       },
     },
   },
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Indexes
-// ─────────────────────────────────────────────────────────────────────────────
+// Virtual for locked account
+userSchema.virtual('isLocked').get(function () {
+  return Boolean(this.lockUntil && this.lockUntil.getTime() > Date.now());
+});
 
+// Indexes
 userSchema.index({ email: 1, status: 1 });
 userSchema.index({ 'oauthProviders.provider': 1, 'oauthProviders.providerId': 1 });
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Hooks
-// ─────────────────────────────────────────────────────────────────────────────
-
 userSchema.pre('save', async function (next) {
-  // Auto-generate displayName if not set
   if (!this.profile.displayName) {
     this.profile.displayName = `${this.profile.firstName} ${this.profile.lastName}`.trim();
   }
 
-  // Hash password if modified
   if (this.isModified('passwordHash') && this.passwordHash) {
     this.passwordHash = await hashPassword(this.passwordHash);
   }
@@ -173,10 +173,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Instance Methods
-// ─────────────────────────────────────────────────────────────────────────────
-
 userSchema.methods['comparePassword'] = async function (plaintext: string): Promise<boolean> {
   if (!this.passwordHash) { return false; }
   const { comparePassword } = await import('../utils/hash.util');
@@ -187,12 +184,41 @@ userSchema.methods['getFullName'] = function (): string {
   return `${String(this.profile.firstName)} ${String(this.profile.lastName)}`.trim();
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Static Methods
-// ─────────────────────────────────────────────────────────────────────────────
+userSchema.methods['incLoginAttempts'] = async function (): Promise<void> {
+  // If previously locked and lock expired, reset attempts count
+  if (this.lockUntil && this.lockUntil.getTime() < Date.now()) {
+    return this.updateOne({
+      $set: { failedLoginAttempts: 1 },
+      $unset: { lockUntil: 1 },
+    });
+  }
 
+  const updates: mongoose.UpdateQuery<IUser> = {
+    $inc: { failedLoginAttempts: 1 },
+  };
+
+  // Lock account if reached max failed attempts
+  if (this.failedLoginAttempts + 1 >= MAX_FAILED_ATTEMPTS && !this.isLocked) {
+    updates.$set = { lockUntil: new Date(Date.now() + LOCK_TIME_MS) };
+  }
+
+  await this.updateOne(updates);
+};
+
+userSchema.methods['resetLockout'] = async function (): Promise<void> {
+  await this.updateOne({
+    $set: { failedLoginAttempts: 0 },
+    $unset: { lockUntil: 1 },
+  });
+};
+
+// Static Methods
 userSchema.statics['findByEmail'] = function (email: string) {
   return this.findOne({ email: email.toLowerCase().trim() });
+};
+
+userSchema.statics['findByEmailWithPassword'] = function (email: string) {
+  return this.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
 };
 
 export const User = mongoose.model<IUser, IUserModel>('User', userSchema);
