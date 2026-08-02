@@ -10,6 +10,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1024).max(65535).default(5000),
   APP_NAME: z.string().default('CareerHub AI'),
   APP_URL: z.string().url().default('http://localhost:5000'),
+  SERVER_URL: z.string().url().default('http://localhost:5000'),
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
   ALLOWED_ORIGINS: z
     .string()
@@ -20,37 +21,44 @@ const envSchema = z.object({
   MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
 
   // JWT
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').optional(),
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters').default('super_secret_access_token_jwt_key_careerhub_ai_32chars'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters').default('super_secret_refresh_token_jwt_key_careerhub_ai_32chars'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
   // Cloudinary
-  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
-  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
-  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
+  CLOUDINARY_CLOUD_NAME: z.string().default('demo_cloud'),
+  CLOUDINARY_API_KEY: z.string().default('demo_key'),
+  CLOUDINARY_API_SECRET: z.string().default('demo_secret'),
 
-  // Nodemailer
+  // Nodemailer & Email Service Strategy
+  EMAIL_PROVIDER: z.enum(['smtp', 'brevo']).default('smtp'),
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_SECURE: z.string().transform((v) => v === 'true').default('false'),
-  SMTP_USER: z.string().email('SMTP_USER must be a valid email'),
-  SMTP_PASSWORD: z.string().min(1, 'SMTP_PASSWORD is required'),
+  SMTP_USER: z.string().default('noreply@careerhub.ai'),
+  SMTP_PASS: z.string().optional(),
+  SMTP_PASSWORD: z.string().default('placeholder_smtp_pass'),
+  BREVO_API_KEY: z.string().optional(),
   EMAIL_FROM_NAME: z.string().default('CareerHub AI'),
-  EMAIL_FROM_ADDRESS: z.string().email().default('noreply@careerhub.ai'),
+  EMAIL_FROM_ADDRESS: z.string().default('noreply@careerhub.ai'),
 
   // OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+  GOOGLE_CALLBACK_URL: z.string().optional(),
 
   LINKEDIN_CLIENT_ID: z.string().optional(),
   LINKEDIN_CLIENT_SECRET: z.string().optional(),
-  LINKEDIN_CALLBACK_URL: z.string().url().optional(),
+  LINKEDIN_CALLBACK_URL: z.string().optional(),
 
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
-  GITHUB_CALLBACK_URL: z.string().url().optional(),
+  GITHUB_CALLBACK_URL: z.string().optional(),
+
+  // AI Integration
+  GEMINI_API_KEY: z.string().optional(),
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900_000), // 15 min
@@ -62,7 +70,7 @@ const envSchema = z.object({
   LOG_DIR: z.string().default('logs'),
 
   // Cookie
-  COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters'),
+  COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters').default('super_secret_cookie_key_careerhub_ai_32chars'),
   COOKIE_SECURE: z.string().transform((v) => v === 'true').default('false'),
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('lax'),
 });
