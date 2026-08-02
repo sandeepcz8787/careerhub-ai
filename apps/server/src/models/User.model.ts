@@ -1,22 +1,25 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-
+import { randomUUID } from 'crypto';
 import { UserRole, AccountStatus } from '@careerhub/shared';
 import { hashPassword } from '../utils/hash.util';
+import { applyGlobalPlugins } from './base.schema';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_TIME_MS = 15 * 60 * 1000; // 15 minutes
 
-/**
- * User document interface — extends Mongoose Document.
- */
 export interface IUser extends Document {
+  uuid: string;
   email: string;
+  phone?: string;
   passwordHash?: string;
   role: UserRole;
   status: AccountStatus;
   isEmailVerified: boolean;
   tokenVersion: number;
   lastLoginAt?: Date;
+  timezone?: string;
+  language?: string;
+  profileCompletion: number;
   failedLoginAttempts: number;
   lockUntil?: Date;
   profile: {
@@ -39,6 +42,10 @@ export interface IUser extends Document {
     providerId: string;
     accessToken?: string;
   }>;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  createdBy?: Schema.Types.ObjectId;
+  updatedBy?: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 
@@ -52,12 +59,10 @@ export interface IUser extends Document {
   resetLockout(): Promise<void>;
 }
 
-/**
- * User model interface with static methods.
- */
 export interface IUserModel extends Model<IUser> {
   findByEmail(email: string): Promise<IUser | null>;
   findByEmailWithPassword(email: string): Promise<IUser | null>;
+  findByUuid(uuid: string): Promise<IUser | null>;
 }
 
 const socialLinkSchema = new Schema(
@@ -99,6 +104,12 @@ const oauthProviderSchema = new Schema(
 
 const userSchema = new Schema<IUser, IUserModel>(
   {
+    uuid: {
+      type: String,
+      default: () => randomUUID(),
+      unique: true,
+      index: true,
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -106,6 +117,11 @@ const userSchema = new Schema<IUser, IUserModel>(
       lowercase: true,
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format'],
+      index: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
       index: true,
     },
     passwordHash: {
@@ -128,10 +144,15 @@ const userSchema = new Schema<IUser, IUserModel>(
     isEmailVerified: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
     lastLoginAt: { type: Date },
+    timezone: { type: String, default: 'UTC' },
+    language: { type: String, default: 'en' },
+    profileCompletion: { type: Number, default: 20, min: 0, max: 100 },
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date },
     profile: { type: profileSchema, required: true },
     oauthProviders: { type: [oauthProviderSchema], default: [] },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: true,
@@ -145,11 +166,15 @@ const userSchema = new Schema<IUser, IUserModel>(
         delete ret['tokenVersion'];
         delete ret['failedLoginAttempts'];
         delete ret['lockUntil'];
+        delete ret['isDeleted'];
+        delete ret['deletedAt'];
         return ret;
       },
     },
   },
 );
+
+applyGlobalPlugins(userSchema);
 
 // Virtual for locked account
 userSchema.virtual('isLocked').get(function () {
@@ -158,6 +183,7 @@ userSchema.virtual('isLocked').get(function () {
 
 // Indexes
 userSchema.index({ email: 1, status: 1 });
+userSchema.index({ uuid: 1 });
 userSchema.index({ 'oauthProviders.provider': 1, 'oauthProviders.providerId': 1 });
 
 // Hooks
@@ -185,7 +211,6 @@ userSchema.methods['getFullName'] = function (): string {
 };
 
 userSchema.methods['incLoginAttempts'] = async function (): Promise<void> {
-  // If previously locked and lock expired, reset attempts count
   if (this.lockUntil && this.lockUntil.getTime() < Date.now()) {
     return this.updateOne({
       $set: { failedLoginAttempts: 1 },
@@ -197,7 +222,6 @@ userSchema.methods['incLoginAttempts'] = async function (): Promise<void> {
     $inc: { failedLoginAttempts: 1 },
   };
 
-  // Lock account if reached max failed attempts
   if (this.failedLoginAttempts + 1 >= MAX_FAILED_ATTEMPTS && !this.isLocked) {
     updates.$set = { lockUntil: new Date(Date.now() + LOCK_TIME_MS) };
   }
@@ -219,6 +243,10 @@ userSchema.statics['findByEmail'] = function (email: string) {
 
 userSchema.statics['findByEmailWithPassword'] = function (email: string) {
   return this.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
+};
+
+userSchema.statics['findByUuid'] = function (uuid: string) {
+  return this.findOne({ uuid });
 };
 
 export const User = mongoose.model<IUser, IUserModel>('User', userSchema);

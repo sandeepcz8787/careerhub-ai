@@ -1,31 +1,7 @@
 import type { ObjectId, ISODateString, Nullable } from './common.types';
+import { UserRole, AccountStatus, OAuthProvider } from '../constants/enums.constants';
 
-/** Platform user roles */
-export enum UserRole {
-  STUDENT = 'student',
-  FRESHER = 'fresher',
-  PROFESSIONAL = 'professional',
-  RECRUITER = 'recruiter',
-  COLLEGE_ADMIN = 'college_admin',
-  ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin',
-}
-
-/** Account status */
-export enum AccountStatus {
-  PENDING_VERIFICATION = 'pending_verification',
-  ACTIVE = 'active',
-  SUSPENDED = 'suspended',
-  DEACTIVATED = 'deactivated',
-  BANNED = 'banned',
-}
-
-/** OAuth provider identifiers */
-export enum OAuthProvider {
-  GOOGLE = 'google',
-  LINKEDIN = 'linkedin',
-  GITHUB = 'github',
-}
+export { UserRole, AccountStatus, OAuthProvider };
 
 /** Social link entry */
 export interface SocialLink {
