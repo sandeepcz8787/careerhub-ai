@@ -7,6 +7,7 @@ import { PublicOnlyRoute } from '@shared/components/guards/PublicOnlyRoute';
 import { Spinner } from '@shared/components/ui/Button';
 
 // Lazy-loaded pages
+const LandingPage = lazy(() => import('@features/landing/pages/LandingPage'));
 const LoginPage = lazy(() => import('@features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@features/auth/pages/RegisterPage'));
 const VerifyEmailPage = lazy(() => import('@features/auth/pages/VerifyEmailPage'));
@@ -35,7 +36,7 @@ const routes: RouteObject[] = [
   // Public Landing Page
   {
     path: Routes.HOME,
-    element: <ComingSoonPage />,
+    element: renderSuspense(<LandingPage />),
   },
 
   // Auth Public Routes (Redirect logged in users to Dashboard)
