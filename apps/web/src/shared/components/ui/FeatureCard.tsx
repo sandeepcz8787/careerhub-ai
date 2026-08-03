@@ -27,18 +27,10 @@ export function FeatureCard({
         className
       )}
     >
-      {/* Background Gradient Glow */}
-      <div
-        className={cn(
-          'absolute -right-16 -top-16 w-36 h-36 rounded-full bg-gradient-to-br opacity-0 group-hover:opacity-40 blur-2xl transition-opacity duration-500 pointer-events-none',
-          gradient
-        )}
-      />
-
       <div>
         {/* Icon wrapper */}
         {icon && (
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary-50 dark:from-primary-950/30 to-accent-50 dark:to-accent-950/30 border border-primary-500/10 dark:border-primary-400/20 text-primary-500 dark:text-primary-400 mb-5 shrink-0 group-hover:scale-110 transition-transform duration-300">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[color:var(--bg-subtle)] border border-[color:var(--border-subtle)] text-primary-500 dark:text-primary-400 mb-5 shrink-0 group-hover:scale-105 transition-transform duration-300">
             {icon}
           </div>
         )}
