@@ -62,7 +62,7 @@ careerhub-ai/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/careerhub-ai.git
+git clone https://github.com/sandeepcz8787/careerhub-ai.git
 cd careerhub-ai
 
 # Install all dependencies (all workspaces)
