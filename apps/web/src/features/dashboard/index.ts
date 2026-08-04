@@ -1,12 +1,12 @@
-/**
- * Dashboard Feature — Scaffold
- *
- * This module will contain:
- * - components/: StatCard, ActivityFeed, RecentApplications, QuickActions
- * - hooks/: useDashboard, useDashboardStats
- * - services/: dashboard.service.ts
- * - pages/: DashboardPage
- * - types/: dashboard.types.ts
- */
-
-export {};
+export { default as DashboardLayout } from './components/DashboardLayout';
+export { default as DashboardPage } from './pages/DashboardPage';
+export * from './components/StatCard';
+export * from './components/ProgressCard';
+export * from './components/ActivityCard';
+export * from './components/RecommendationCard';
+export * from './components/QuickActionCard';
+export * from './components/CalendarCard';
+export * from './pages/ComingSoonWidget';
+export * from './hooks/useDashboard';
+export * from './services/dashboard.service';
+export * from './store/dashboardSlice';

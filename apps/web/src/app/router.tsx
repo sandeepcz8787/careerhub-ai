@@ -16,8 +16,17 @@ const ResetPasswordPage = lazy(() => import('@features/auth/pages/ResetPasswordP
 const ActiveSessionsPage = lazy(() => import('@features/auth/pages/ActiveSessionsPage'));
 const SecuritySettingsPage = lazy(() => import('@features/auth/pages/SecuritySettingsPage'));
 
+// Dashboard pages
+const DashboardLayout = lazy(() => import('@features/dashboard/components/DashboardLayout'));
+const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
+const ComingSoonWidget = lazy(() =>
+  import('@features/dashboard/pages/ComingSoonWidget').then((m) => ({ default: m.ComingSoonWidget }))
+);
+
 // Placeholder & error pages
-import { ComingSoonPage } from '@shared/components/pages/ComingSoonPage';
+const ComingSoonPage = lazy(() =>
+  import('@shared/components/pages/ComingSoonPage').then((m) => ({ default: m.ComingSoonPage }))
+);
 import { NotFoundPage } from '@shared/components/pages/NotFoundPage';
 
 const renderSuspense = (component: React.ReactNode) => (
@@ -63,18 +72,92 @@ const routes: RouteObject[] = [
     element: renderSuspense(<ResetPasswordPage />),
   },
 
-  // Protected Settings & Sessions
+  // Protected Area (Sidebar Navigation & Sub-views)
   {
-    path: Routes.SETTINGS,
-    element: <ProtectedRoute>{renderSuspense(<SecuritySettingsPage />)}</ProtectedRoute>,
-  },
-  {
-    path: '/settings/sessions',
-    element: <ProtectedRoute>{renderSuspense(<ActiveSessionsPage />)}</ProtectedRoute>,
-  },
-  {
-    path: Routes.DASHBOARD,
-    element: <ProtectedRoute>{renderSuspense(<ComingSoonPage />)}</ProtectedRoute>,
+    path: '/',
+    element: <ProtectedRoute>{renderSuspense(<DashboardLayout />)}</ProtectedRoute>,
+    children: [
+      {
+        path: 'dashboard',
+        element: renderSuspense(<DashboardPage />),
+      },
+      {
+        path: 'profile',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'settings',
+        element: renderSuspense(<SecuritySettingsPage />),
+      },
+      {
+        path: 'settings/sessions',
+        element: renderSuspense(<ActiveSessionsPage />),
+      },
+      {
+        path: 'resume-builder',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'resume-checker',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'cover-letter',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'jobs',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'internships',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'applications',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'mock-interview',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'coding-challenges',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'community',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'referrals',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'interview-experiences',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'chat',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'notes',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'analytics',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'notifications',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+      {
+        path: 'help',
+        element: renderSuspense(<ComingSoonWidget />),
+      },
+    ],
   },
 
   // Catch-all 404
