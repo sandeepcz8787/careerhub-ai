@@ -16,6 +16,10 @@ const ResetPasswordPage = lazy(() => import('@features/auth/pages/ResetPasswordP
 const ActiveSessionsPage = lazy(() => import('@features/auth/pages/ActiveSessionsPage'));
 const SecuritySettingsPage = lazy(() => import('@features/auth/pages/SecuritySettingsPage'));
 
+// Profile & Settings
+const ProfilePage = lazy(() => import('@features/profile/pages/ProfilePage'));
+const SettingsPage = lazy(() => import('@features/profile/pages/SettingsPage'));
+
 // Dashboard pages
 const DashboardLayout = lazy(() => import('@features/dashboard/components/DashboardLayout'));
 const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
@@ -83,11 +87,11 @@ const routes: RouteObject[] = [
       },
       {
         path: 'profile',
-        element: renderSuspense(<ComingSoonWidget />),
+        element: renderSuspense(<ProfilePage />),
       },
       {
         path: 'settings',
-        element: renderSuspense(<SecuritySettingsPage />),
+        element: renderSuspense(<SettingsPage />),
       },
       {
         path: 'settings/sessions',

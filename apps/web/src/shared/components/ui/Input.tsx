@@ -10,7 +10,7 @@ import { cn } from '@shared/utils/cn';
 export interface InputProps extends ComponentPropsWithoutRef<'input'> {
   label?: string;
   helperText?: string;
-  errorText?: string;
+  errorText?: any;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   isRequired?: boolean;
@@ -102,7 +102,7 @@ Input.displayName = 'Input';
 export interface TextareaProps extends ComponentPropsWithoutRef<'textarea'> {
   label?: string;
   helperText?: string;
-  errorText?: string;
+  errorText?: any;
   isRequired?: boolean;
 }
 

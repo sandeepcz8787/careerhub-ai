@@ -133,3 +133,63 @@ export interface Language extends BaseEntity {
   language: string;
   proficiency: LanguageProficiency;
 }
+
+export interface UserSkill {
+  name: string;
+  category: string;
+  proficiency: SkillProficiency;
+  yearsOfExperience: number;
+}
+
+export interface ProfilePrivacySettings {
+  profileVisibility: 'public' | 'private' | 'connections';
+  searchVisibility: boolean;
+  emailVisibility: boolean;
+  phoneVisibility: boolean;
+}
+
+export interface CareerProfile extends BaseEntity {
+  userId: ObjectId;
+  headline?: string;
+  bio?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  
+  // Personal Info
+  dob?: ISODateString;
+  gender?: string;
+  phone?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  timezone?: string;
+  language?: string;
+  coverImageUrl?: string;
+  coverImagePublicId?: string;
+
+  // Career Info
+  currentCompany?: string;
+  currentDesignation?: string;
+  experienceLevel: ExperienceLevel;
+  noticePeriod?: string;
+  expectedSalary?: number;
+  currentSalary?: number;
+  preferredJobRole?: string[];
+  preferredJobType?: string[];
+  preferredLocation?: string[];
+  remotePreference?: string;
+  isOpenToWork: boolean;
+
+  // Skills
+  skills: UserSkill[];
+  softSkills: string[];
+
+  // Portfolio
+  portfolioTheme?: string;
+  portfolioVisibility?: 'public' | 'private' | 'connections';
+  featuredProjects?: ObjectId[];
+
+  // Settings & Privacy
+  privacySettings: ProfilePrivacySettings;
+}
