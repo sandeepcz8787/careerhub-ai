@@ -1,12 +1,6 @@
-/**
- * Resume Feature — Scaffold
- *
- * This module will contain:
- * - components/: ResumeEditor, ResumePreview, AtsScore, SectionEditor
- * - hooks/: useResume, useAtsCheck, useAiReview
- * - services/: resume.service.ts, ats.service.ts
- * - pages/: ResumeBuilderPage, AtsCheckerPage, AiReviewPage
- * - types/: resume.types.ts
- */
-
-export {};
+export { default as ResumeBuilderPage } from './pages/ResumeBuilderPage';
+export { default as ResumeCreatePage } from './pages/ResumeCreatePage';
+export { default as ResumeEditorPage } from './pages/ResumeEditorPage';
+export { default as PublicResumePage } from './pages/PublicResumePage';
+export * from './types/resume.types';
+export * from './services/resume.service';

@@ -4,7 +4,25 @@ import type { SkillProficiency, LanguageProficiency, ExperienceLevel } from '../
 export interface ResumeSection {
   id: string;
   name: string;
-  type: 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'custom';
+  type:
+    | 'personal_info'
+    | 'summary'
+    | 'objective'
+    | 'education'
+    | 'experience'
+    | 'internships'
+    | 'projects'
+    | 'skills'
+    | 'soft_skills'
+    | 'certifications'
+    | 'achievements'
+    | 'languages'
+    | 'volunteer'
+    | 'publications'
+    | 'awards'
+    | 'social_links'
+    | 'portfolio'
+    | 'custom';
   content: Record<string, unknown>;
   order: number;
 }
@@ -20,6 +38,18 @@ export interface Resume extends BaseEntity {
   isPrimary: boolean;
   fileUrl?: string;
   status: 'active' | 'archived';
+  privacy: 'public' | 'private' | 'unlisted';
+  slug?: string;
+  customization: {
+    font?: string;
+    fontSize?: string;
+    headingSize?: string;
+    lineHeight?: string;
+    margins?: string;
+    spacing?: string;
+    accentColor?: string;
+    pageSize?: string;
+  };
   isDeleted: boolean;
   deletedAt?: ISODateString;
 }

@@ -19,6 +19,9 @@ export interface IResume extends Document {
   publicShareLink?: string;
   isPrimary: boolean;
   fileUrl?: string;
+  privacy: 'public' | 'private' | 'unlisted';
+  slug?: string;
+  customization: Record<string, any>;
   status: string;
   createdBy?: Schema.Types.ObjectId;
   updatedBy?: Schema.Types.ObjectId;
@@ -32,7 +35,26 @@ const resumeSectionSchema = new Schema(
     name: { type: String, required: true },
     type: {
       type: String,
-      enum: ['summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'custom'],
+      enum: [
+        'personal_info',
+        'summary',
+        'objective',
+        'education',
+        'experience',
+        'internships',
+        'projects',
+        'skills',
+        'soft_skills',
+        'certifications',
+        'achievements',
+        'languages',
+        'volunteer',
+        'publications',
+        'awards',
+        'social_links',
+        'portfolio',
+        'custom',
+      ],
       required: true,
     },
     content: { type: Schema.Types.Mixed, default: {} },
@@ -53,6 +75,9 @@ const resumeSchema = new Schema<IResume>(
     publicShareLink: { type: String, unique: true, sparse: true },
     isPrimary: { type: Boolean, default: false },
     fileUrl: { type: String },
+    privacy: { type: String, enum: ['public', 'private', 'unlisted'], default: 'private' },
+    slug: { type: String, unique: true, sparse: true },
+    customization: { type: Schema.Types.Mixed, default: {} },
   },
   baseSchemaOptions,
 );
@@ -61,5 +86,6 @@ applyGlobalPlugins(resumeSchema);
 
 resumeSchema.index({ userId: 1, isPrimary: 1 });
 resumeSchema.index({ userId: 1, updatedAt: -1 });
+resumeSchema.index({ slug: 1 });
 
 export const Resume = mongoose.model<IResume>('Resume', resumeSchema);

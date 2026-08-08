@@ -11,6 +11,7 @@ export * from './Permission.model';
 // Career
 export * from './Resume.model';
 export * from './ResumeTemplate.model';
+export * from './ResumeVersion.model';
 export * from './ATSReport.model';
 export * from './CoverLetter.model';
 export * from './Certificate.model';

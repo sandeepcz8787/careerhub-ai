@@ -20,6 +20,12 @@ const SecuritySettingsPage = lazy(() => import('@features/auth/pages/SecuritySet
 const ProfilePage = lazy(() => import('@features/profile/pages/ProfilePage'));
 const SettingsPage = lazy(() => import('@features/profile/pages/SettingsPage'));
 
+// Resume Builder
+const ResumeBuilderPage = lazy(() => import('@features/resume/pages/ResumeBuilderPage'));
+const ResumeCreatePage = lazy(() => import('@features/resume/pages/ResumeCreatePage'));
+const ResumeEditorPage = lazy(() => import('@features/resume/pages/ResumeEditorPage'));
+const PublicResumePage = lazy(() => import('@features/resume/pages/PublicResumePage'));
+
 // Dashboard pages
 const DashboardLayout = lazy(() => import('@features/dashboard/components/DashboardLayout'));
 const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
@@ -75,6 +81,10 @@ const routes: RouteObject[] = [
     path: Routes.RESET_PASSWORD,
     element: renderSuspense(<ResetPasswordPage />),
   },
+  {
+    path: 'resume/public/:username/:resumeSlug',
+    element: renderSuspense(<PublicResumePage />),
+  },
 
   // Protected Area (Sidebar Navigation & Sub-views)
   {
@@ -99,7 +109,15 @@ const routes: RouteObject[] = [
       },
       {
         path: 'resume-builder',
-        element: renderSuspense(<ComingSoonWidget />),
+        element: renderSuspense(<ResumeBuilderPage />),
+      },
+      {
+        path: 'resume-builder/create',
+        element: renderSuspense(<ResumeCreatePage />),
+      },
+      {
+        path: 'resume-builder/edit/:id',
+        element: renderSuspense(<ResumeEditorPage />),
       },
       {
         path: 'resume-checker',

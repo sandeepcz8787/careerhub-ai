@@ -8,13 +8,46 @@ export const createResumeSchema = z.object({
     z.object({
       id: z.string(),
       name: z.string(),
-      type: z.enum(['summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'custom']),
+      type: z.enum([
+        'personal_info',
+        'summary',
+        'objective',
+        'education',
+        'experience',
+        'internships',
+        'projects',
+        'skills',
+        'soft_skills',
+        'certifications',
+        'achievements',
+        'languages',
+        'volunteer',
+        'publications',
+        'awards',
+        'social_links',
+        'portfolio',
+        'custom',
+      ]),
       content: z.record(z.unknown()),
       order: z.number(),
     }),
   ),
   isPrimary: z.boolean().default(false),
-  fileUrl: z.string().url().optional(),
+  fileUrl: z.string().url().optional().or(z.literal('')),
+  privacy: z.enum(['public', 'private', 'unlisted']).default('private'),
+  slug: z.string().optional(),
+  customization: z
+    .object({
+      font: z.string().optional(),
+      fontSize: z.string().optional(),
+      headingSize: z.string().optional(),
+      lineHeight: z.string().optional(),
+      margins: z.string().optional(),
+      spacing: z.string().optional(),
+      accentColor: z.string().optional(),
+      pageSize: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const updateResumeSchema = createResumeSchema.partial();
